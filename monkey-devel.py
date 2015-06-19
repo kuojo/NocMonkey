@@ -124,11 +124,13 @@ class Window(QtGui.QMainWindow):
 
                 self.ack =  self.acks.write_acks()
                 self.btns = []
-                ackButtons = QtGui.QWidget()
+                self.ackButtons = [QtGui.QWidget(), QtGui.QWidget()]
                 self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
                 self.vbox[0].setSpacing(0)
                 self.vbox[1].setSpacing(0)
-                ackButtons.setLayout(self.vbox[0])
+                self.ackButtons[0].setLayout(self.vbox[0])
+                self.ackButtons[1].setLayout(self.vbox[1])
+                self.stackWidget = QtGui.QStackedWidget()
                 
 
                 for i in range(len(self.ack)):
@@ -140,10 +142,16 @@ class Window(QtGui.QMainWindow):
                         self.vbox[0].addWidget(self.btns[i][0])
                         
                         self.vbox[1].addWidget(self.btns[i][1])
-
                 
+                closingButton = QtGui.QPushButton("Ok")
+                closingButton.setStatusTip("Accept Changes")
+                closingButton.clicked.connect(self.changeLayout)
+                self.vbox[1].addWidget(closingButton)
+                
+                self.stackWidget.addWidget(self.ackButtons[0])
+                self.stackWidget.addWidget(self.ackButtons[1])
 
-                self.setCentralWidget(ackButtons)
+                self.setCentralWidget(self.stackWidget)
                 
                 #Dropped the 'n' because of the addAction method, and because I am lazy                    
                 addActio = QtGui.QAction(QtGui.QIcon("add.png"), '&Add', self)
@@ -208,7 +216,8 @@ class Window(QtGui.QMainWindow):
                 else:
                         pass
         def removeButton(self):
-                text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
+                self.stackWidget.setCurrentIndex(1)
+                """text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
                 if ok:
                         foo = False 
                         for i in range(len(self.ack)):
@@ -228,7 +237,7 @@ class Window(QtGui.QMainWindow):
                             self.statusBar().showMessage("Not a valid trigger")
                             self.removeButton()
                 else:
-                        pass
+                        pass"""
         def addTooltip(self):
                 text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'What trigger:')
                 if ok:
@@ -265,6 +274,12 @@ class Window(QtGui.QMainWindow):
             else:
                 self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
                 self.onTop = False
+        def changeLayout(self):
+            if self.stackWidget.currentIndex == 0:
+                self.stackWidget.setCurrentIndex(1)
+            else:
+                self.stackWidget.setCurrentIndex(0)
+        
 
 def main():
         app = QtGui.QApplication(sys.argv)
