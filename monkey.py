@@ -1,6 +1,7 @@
 #!/usr/bin/python
 
 import os
+import os.path
 import sys
 from PyQt4 import QtGui, QtCore
 
@@ -11,7 +12,7 @@ clear = lambda: os.system('cls')
 class Acknowledgements(object):
         def __init__(self,flatfile):
                 self.flatfile = str(flatfile)
-                
+                self.initilize(self.flatfile)
                 self.clipboard = QtGui.QApplication.clipboard() 
 
                 #acks = self.write_acks()
@@ -21,18 +22,18 @@ class Acknowledgements(object):
                 acks = []
                 with open(str(self.flatfile),"r") as f:
                         for line in f:
-                                acks.append(line)
+                                acks.append(line.split(','))
                         return acks
 
         def add_to_acks(self, string):
                 f = open(self.flatfile, "a+")
-                f.write(str(string) + "\n")
+                f.write(str(string) + ",\n")
                 f.close()
 
         def rewrite_acks(self, acks):
                 f = open(self.flatfile, "w+")
                 for i in range(len(acks)):
-                        f.write(str(acks[i]))
+                        f.write(",".join(acks[i]))
                 f.close()
 
         def add_to_clipboard(self, text): #Orginally I used Tk and this was nesscary
@@ -50,8 +51,6 @@ class Acknowledgements(object):
                 print "\nNot an Option\n"
                 raw_input("Press enter to continue")
 
-#main function
-	
         def menu(self, acks):
                 copied = ""
                 while True:
@@ -87,6 +86,32 @@ class Acknowledgements(object):
                                 self.nope()
 
                 return 0
+        def initilize(self, flatfile):
+            foo = os.path.isfile(flatfile)
+            acks = []
+            if foo == False:
+                acks = [['Looking into it', '\n'], 
+                        ['Ignoring per playbook', '\n'], 
+                        ['Ignoring per announcement', '\n'], 
+                        ['Watching for 5 mins', '\n'],
+                        ['Watching for 6 mins', '\n'],
+                        ['Watching for 10 mins', '\n'], 
+                        ['Watching for 30 mins', '\n'],
+                        ['Watching for 90 mins', '\n'],
+                        ['Watching for 2 hours', '\n'],
+                        ['^^^ Restarting Tomcat', '\n'],
+                        ['^^^ Restarting Tomcat and Hp Document Renderer', '\n'],
+                        ['^^^ Restaring Amavisd', '\n'],
+                        ['^^^ Running Simple Test', '\n'],
+                        ['^^^ Checking Healthchecks', '\n'],
+                        ['^^^ Checking Connectivity', '\n'],
+                        ['^^^ Running Disk Cleanup', '\n'],
+                        ['^^^ Writing Ticket', '\n'],
+                        ['### Contacting DevOps', '\n'],
+                        ['Expected Trigger. Due to Deployment', '\n'],
+                        ['Passed Healthcheck', '\n'],
+                        ['DevOps are Aware', '\n']]
+                self.rewrite_acks(acks)
 
 class Window(QtGui.QMainWindow):
         def __init__(self):
@@ -106,7 +131,9 @@ class Window(QtGui.QMainWindow):
                 
 
                 for i in range(len(self.ack)):
-                        self.btns.append(QtGui.QPushButton(str(self.ack[i]).rstrip('\n')))
+                        self.btns.append(QtGui.QPushButton(str(self.ack[i][0])))
+                        self.btns[i].setToolTip(str(self.ack[i][1]).rstrip('\n'))
+                        self.btns[i].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
                         self.btns[i].clicked.connect(self.buttonClicked)
                         self.btns[i].resize(self.btns[i].sizeHint())
                         self.vbox.addWidget(self.btns[i])
@@ -161,7 +188,7 @@ class Window(QtGui.QMainWindow):
                 text, ok = QtGui.QInputDialog.getText(self, 'Add Acknowledgement', 'Enter new acknowledgement:')
                 if ok:
                         self.acks.add_to_acks(text)
-                        self.ack.append(str(text)+ "\n")
+                        self.ack.append([str(text), "\n"])
                         self.btns.append(QtGui.QPushButton(str(text).rstrip('\n')))
                         i=len(self.btns)-1
                         self.btns[i].clicked.connect(self.buttonClicked)
@@ -172,34 +199,45 @@ class Window(QtGui.QMainWindow):
         def removeButton(self):
                 text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
                 if ok:
-                        try:
-                                num = self.ack.index(text + "\n")
-                                del self.ack[num]
-                                self.vbox.removeWidget(self.btns[num])
-                                self.btns[num].deleteLater()
-                                del self.btns[num]
-                                self.acks.rewrite_acks(self.ack)
-                        except ValueError:
-                                self.statusBar().showMessage("Not a valid trigger")
-                                self.removeButton()
-                                
+                        foo = False 
+                        for i in range(len(self.ack)):
+                            try:
+                                    self.ack[i].index(text)
+                                    foo = True
+                                    del self.ack[i]
+                                    self.vbox.removeWidget(self.btns[i])
+                                    self.btns[i].deleteLater()
+                                    del self.btns[i]
+                                    self.acks.rewrite_acks(self.ack)
+                            except ValueError:
+                                    pass
+                        if foo == False:
+                            self.statusBar().showMessage("Not a valid trigger")
+                            self.removeButton()
                 else:
                         pass
         def addTooltip(self):
                 text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'What trigger:')
                 if ok:
-                        try:
-                                num = self.ack.index(text + "\n")
-                                text,ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:')
+                       foo = False
+                       for i in range(len(self.ack)):
+                            try:
+                                    num = self.ack[i].index(text)
+                                    foo = True
+                                    text,ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:')
                                         
-                                if ok:
-                                        self.btns[num].setToolTip(str(text))
-                                        self.btns[num].setStatusTip(str(text))
-                                else:
-                                        pass
-                        except ValueError:
-                                self.statusBar().showMessage("Not a valid trigger")
-                                self.addTooltip
+                                    if ok:
+                                            self.ack[i][1] = str(text) + "\n"
+                                            self.btns[i].setToolTip(str(text))
+                                            self.btns[i].setStatusTip(str(text))
+                                            self.acks.rewrite_acks(self.ack)
+                                    else:
+                                            pass
+                            except ValueError:
+                                pass
+                       if foo == False:
+                           self.statusBar().showMessage("Not a valid trigger")
+                           self.addToolTip()
                 else:
                         pass
         def clipStatus(self):
