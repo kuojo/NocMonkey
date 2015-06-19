@@ -125,18 +125,21 @@ class Window(QtGui.QMainWindow):
                 self.ack =  self.acks.write_acks()
                 self.btns = []
                 ackButtons = QtGui.QWidget()
-                self.vbox = QtGui.QVBoxLayout()
-                self.vbox.setSpacing(0)
-                ackButtons.setLayout(self.vbox)
+                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
+                self.vbox[0].setSpacing(0)
+                self.vbox[1].setSpacing(0)
+                ackButtons.setLayout(self.vbox[0])
                 
 
                 for i in range(len(self.ack)):
-                        self.btns.append(QtGui.QPushButton(str(self.ack[i][0])))
-                        self.btns[i].setToolTip(str(self.ack[i][1]).rstrip('\n'))
-                        self.btns[i].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
-                        self.btns[i].clicked.connect(self.buttonClicked)
-                        self.btns[i].resize(self.btns[i].sizeHint())
-                        self.vbox.addWidget(self.btns[i])
+                        self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
+                        self.btns[i][0].setToolTip(str(self.ack[i][1]).rstrip('\n'))
+                        self.btns[i][0].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
+                        self.btns[i][0].clicked.connect(self.buttonClicked)
+                        self.btns[i][0].resize(self.btns[i][0].sizeHint())
+                        self.vbox[0].addWidget(self.btns[i][0])
+                        
+                        self.vbox[1].addWidget(self.btns[i][1])
 
                 
 
@@ -157,6 +160,12 @@ class Window(QtGui.QMainWindow):
                 editAction.setShortcut("Ctrl+E")
                 editAction.setStatusTip("Set Trigger Tooltip")
                 editAction.triggered.connect(self.addTooltip)
+
+                topAction = QtGui.QAction(QtGui.QIcon("ontop.png"), "&Top", self)
+                topAction.setShortcut("Ctrl+T")
+                topAction.setStatusTip("Place application always on top")
+                topAction.triggered.connect(self.alwaysOnTop)
+                self.onTop = False
                 
                 exitAction = QtGui.QAction(QtGui.QIcon("need_to_add.png"), '&Exit', self)
                 exitAction.setShortcut("Ctrl+Q")
@@ -169,6 +178,7 @@ class Window(QtGui.QMainWindow):
                 menubar.addAction(addActio)
                 menubar.addAction(removeActio)
                 menubar.addAction(editAction)
+                #menubar.addAction(topAction)
                 menubar.addAction(exitAction)
                 
                 self.setWindowTitle('Noc Monkey')
@@ -189,11 +199,12 @@ class Window(QtGui.QMainWindow):
                 if ok:
                         self.acks.add_to_acks(text)
                         self.ack.append([str(text), "\n"])
-                        self.btns.append(QtGui.QPushButton(str(text).rstrip('\n')))
+                        self.btns.append([QtGui.QPushButton(str(text).rstrip('\n')),QtGui.QCheckBox(str(text))])
                         i=len(self.btns)-1
-                        self.btns[i].clicked.connect(self.buttonClicked)
-                        self.btns[i].resize(self.btns[i].sizeHint())
-                        self.vbox.addWidget(self.btns[i])
+                        self.btns[i][0].clicked.connect(self.buttonClicked)
+                        self.btns[i][0].resize(self.btns[i][0].sizeHint())
+                        self.vbox[0].addWidget(self.btns[i][0])
+                        self.vbox[1].addWidget(self.btns[i][1])
                 else:
                         pass
         def removeButton(self):
@@ -205,8 +216,10 @@ class Window(QtGui.QMainWindow):
                                     self.ack[i].index(text)
                                     foo = True
                                     del self.ack[i]
-                                    self.vbox.removeWidget(self.btns[i])
-                                    self.btns[i].deleteLater()
+                                    self.vbox[0].removeWidget(self.btns[i][0])
+                                    self.vbox[1].removeWidget(self.btns[i][1])
+                                    self.btns[i][0].deleteLater()
+                                    self.btns[i][1].deleteLater()
                                     del self.btns[i]
                                     self.acks.rewrite_acks(self.ack)
                             except ValueError:
@@ -228,8 +241,8 @@ class Window(QtGui.QMainWindow):
                                         
                                     if ok:
                                             self.ack[i][1] = str(text) + "\n"
-                                            self.btns[i].setToolTip(str(text))
-                                            self.btns[i].setStatusTip(str(text))
+                                            self.btns[i][0].setToolTip(str(text))
+                                            self.btns[i][0].setStatusTip(str(text))
                                             self.acks.rewrite_acks(self.ack)
                                     else:
                                             pass
@@ -245,6 +258,13 @@ class Window(QtGui.QMainWindow):
                         self.statusBar().showMessage(self.acks.clipboard.text())
                 else:
                         pass
+        def alwaysOnTop(self): #This function doesn't work. Not sure why
+            if self.onTop == False:
+                self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
+                self.onTop = True
+            else:
+                self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
+                self.onTop = False
 
 def main():
         app = QtGui.QApplication(sys.argv)
