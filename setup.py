@@ -8,7 +8,7 @@ import sys
 base = 'Win32GUI' if sys.platform=='win32' else None
 
 executables = [
-    Executable('monkey-stable.py', base=base, targetName = 'NocMonkeyV0_02.exe',)
+    Executable('monkey-stable.py', base=base, targetName = 'NocMonkeyV0_02.exe', icon = 'monkey.ico')
 ]
 
 setup(name='NocMonkey',
