@@ -8,7 +8,10 @@ Acks.txt must be in the same folder as monkey.py<br>
 
 
 ToDo:<br>
-Change rm and edit layout so button is on bottom.<br>
-Add toggle to addToolTip so that the box never stays checked<br>
-Make sure when you click "Add" it goes back to vbox[0]<br>
+Add About menu<br>
+Add config file<br>
+Find a way to drag buttons around for organization<br>
+Add current tool tip to box to edit. Maybe possible through QlineEdit when box is initalized?<br>
+Move Exit menu or add confirm close<br>
+
 

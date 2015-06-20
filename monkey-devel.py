@@ -22,6 +22,8 @@ class Acknowledgements(object):
                 acks = []
                 with open(str(self.flatfile),"r") as f:
                         for line in f:
+                                if line == "\n" or line == "":
+                                    continue
                                 acks.append(line.split(','))
                         return acks
 
@@ -125,17 +127,24 @@ class Window(QtGui.QMainWindow):
                 self.ack =  self.acks.write_acks()
                 self.btns = []
                 self.ackButtons = [QtGui.QWidget(), QtGui.QWidget()]
-                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
+                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
                 self.vbox[0].setSpacing(0)
                 self.vbox[1].setSpacing(0)
                 self.ackButtons[0].setLayout(self.vbox[0])
                 self.ackButtons[1].setLayout(self.vbox[1])
                 self.stackWidget = QtGui.QStackedWidget()
                 
-                closingButton = QtGui.QPushButton("Ok")
-                closingButton.setStatusTip("Accept Changes")
-                closingButton.clicked.connect(self.changeLayout)
-                self.vbox[1].addWidget(closingButton)
+                
+                self.closingButton = QtGui.QPushButton("Ok")
+                self.closingButton.setStatusTip("Accept Changes")
+                self.closingButton.clicked.connect(self.changeLayout)
+                self.closingButton.resize(self.closingButton.sizeHint())
+                #self.closingButton.hide()
+
+                self.title=QtGui.QLabel(self)
+                self.title.setFixedSize(150,20)
+                #self.title.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+                self.vbox[1].addWidget(self.title)
 
                 for i in range(len(self.ack)):
                         self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
@@ -147,9 +156,9 @@ class Window(QtGui.QMainWindow):
                         
                         self.btns[i][1].stateChanged.connect(self.buttonChecked)
                         self.vbox[1].addWidget(self.btns[i][1])
-                        
-                
-                                
+                self.spacer = QtGui.QWidget()
+                self.vbox[1].addWidget(self.spacer)
+                self.vbox[1].addWidget(self.closingButton)
                 self.stackWidget.addWidget(self.ackButtons[0])
                 self.stackWidget.addWidget(self.ackButtons[1])
 
@@ -194,7 +203,7 @@ class Window(QtGui.QMainWindow):
                 menubar.addAction(exitAction)
                 
                 self.setWindowTitle('Noc Monkey')
-                self.setWindowIcon(QtGui.QIcon('monkey.png'))
+                self.setWindowIcon(QtGui.QIcon('monkey-head.png'))
 
                 #self.acks.clipboard.connect(self.acks.clipboard, QtCore.SIGNAL("dataChanged()"), self.clipStats)
                 self.acks.clipboard.dataChanged.connect(self.clipStatus)
@@ -206,7 +215,9 @@ class Window(QtGui.QMainWindow):
                 self.acks.add_to_clipboard(sender.text())
                 self.statusBar().showMessage("'" + sender.text() +"' was copied")
 
-        def appendButton(self): #Make sure layout is sent to 0!
+        def appendButton(self):
+                if self.stackWidget.currentIndex() != 0:
+                        self.changeLayout()
                 text, ok = QtGui.QInputDialog.getText(self, 'Add Acknowledgement', 'Enter new acknowledgement:')
                 if ok:
                         self.acks.add_to_acks(text)
@@ -216,12 +227,16 @@ class Window(QtGui.QMainWindow):
                         self.btns[i][0].clicked.connect(self.buttonClicked)
                         self.btns[i][1].stateChanged.connect(self.buttonChecked)
                         self.btns[i][0].resize(self.btns[i][0].sizeHint())
+                        self.vbox[1].removeWidget(self.spacer)
+                        self.vbox[1].removeWidget(self.closingButton)
                         self.vbox[0].addWidget(self.btns[i][0])
                         self.vbox[1].addWidget(self.btns[i][1])
+                        self.vbox[1].addWidget(self.spacer)
+                        self.vbox[1].addWidget(self.closingButton)
                 else:
                         pass
         def removeButton(self):
-
+                self.title.setText("Remove Acknowledgement")
                 self.rmButton = True
                 self.stackWidget.setCurrentIndex(1)
                 """text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
@@ -246,6 +261,7 @@ class Window(QtGui.QMainWindow):
                 else:
                         pass"""
         def addTooltip(self):
+            self.title.setText("Add a Hint to a Trigger")
             self.addHint = True
             self.stackWidget.setCurrentIndex(1)
             """
@@ -276,7 +292,7 @@ class Window(QtGui.QMainWindow):
                         self.statusBar().showMessage(self.acks.clipboard.text())
                 else:
                         pass
-        def alwaysOnTop(self): #This function doesn't work. Not sure why
+        def alwaysOnTop(self): #This function doesn't work. Causes app to disappear. Not sure why. Sorry :(
             if self.onTop == False:
                 self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
                 self.onTop = True
@@ -286,6 +302,7 @@ class Window(QtGui.QMainWindow):
         def changeLayout(self):
             self.rmButton = False
             self.addHint = False
+            self.title.setText("")
             self.stackWidget.setCurrentIndex(0)
         def buttonChecked(self):
             sender = self.sender()
@@ -312,9 +329,10 @@ class Window(QtGui.QMainWindow):
                             self.ack[i][1] = str(text) + "\n"
                             self.btns[i][0].setToolTip(str(text))
                             self.btns[i][0].setStatusTip(str(text))
+                            self.btns[i][1].toggle()
                             self.acks.rewrite_acks(self.ack)
                         else:
-                            self.btns[i][1].toggle() #Need to add to both sides
+                            self.btns[i][1].toggle() 
                     except ValueError:
                         pass
 

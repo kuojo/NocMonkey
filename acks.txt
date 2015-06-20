@@ -22,5 +22,4 @@ Monitis Reports Server OK,
 Passed Healthcheck,
 DevOps are Aware,
 ^^^ Writing Ticket,
-Ticket#27925,Not sure
-
+Ticket#27925,jms
