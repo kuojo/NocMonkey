@@ -320,17 +320,22 @@ class Window(QtGui.QMainWindow):
                         self.acks.rewrite_acks(self.ack)
                     except ValueError:
                         pass
+
             if self.addHint == True:
                 for i in range(len(self.ack)):
                     try:
                         self.ack[i].index(str(sender.text()))
-                        text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:')
+                        line = QtGui.QLineEdit
+                        text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:', QtGui.QLineEdit.Normal, str(self.btns[i][0].statusTip()))
                         if ok:
                             self.ack[i][1] = str(text) + "\n"
                             self.btns[i][0].setToolTip(str(text))
                             self.btns[i][0].setStatusTip(str(text))
+                            self.btns[i][1].setToolTip(str(text))
+                            self.btns[i][1].setStatusTip(str(text))
                             self.btns[i][1].toggle()
                             self.acks.rewrite_acks(self.ack)
+                            
                         else:
                             self.btns[i][1].toggle() 
                     except ValueError:
