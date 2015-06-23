@@ -156,8 +156,9 @@ class Window(QtGui.QMainWindow):
                         
                             self.btns[i][1].stateChanged.connect(self.buttonChecked)
                             self.vbox[1].addWidget(self.btns[i][1])
-                    self.spacer = QtGui.QWidget()
-                    self.vbox[1].addWidget(self.spacer)
+                    self.spacer = (QtGui.QWidget(),QtGui.QWidget())
+                    self.vbox[1].addWidget(self.spacer[1])
+                    self.vbox[0].addWidget(self.spacer[0])
                     self.vbox[1].addWidget(self.closingButton)
                     self.stackWidget.addWidget(self.ackButtons[0])
                     self.stackWidget.addWidget(self.ackButtons[1])
@@ -242,11 +243,13 @@ class Window(QtGui.QMainWindow):
                         self.btns[i][0].clicked.connect(self.buttonClicked)
                         self.btns[i][1].stateChanged.connect(self.buttonChecked)
                         self.btns[i][0].resize(self.btns[i][0].sizeHint())
-                        self.vbox[1].removeWidget(self.spacer)
+                        self.vbox[1].removeWidget(self.spacer[1])
+                        self.vbox[0].removeWidget(self.spacer[0])
                         self.vbox[1].removeWidget(self.closingButton)
                         self.vbox[0].addWidget(self.btns[i][0])
                         self.vbox[1].addWidget(self.btns[i][1])
-                        self.vbox[1].addWidget(self.spacer)
+                        self.vbox[1].addWidget(self.spacer[1])
+                        self.vbox[0].addWidget(self.spacer[0])
                         self.vbox[1].addWidget(self.closingButton)
                 else:
                         pass

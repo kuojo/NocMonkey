@@ -22,6 +22,8 @@ class Acknowledgements(object):
                 acks = []
                 with open(str(self.flatfile),"r") as f:
                         for line in f:
+                                if line == "\n" or line == "":
+                                    continue
                                 acks.append(line.split(','))
                         return acks
 
@@ -124,12 +126,25 @@ class Window(QtGui.QMainWindow):
 
                 self.ack =  self.acks.write_acks()
                 self.btns = []
-                ackButtons = QtGui.QWidget()
-                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
+                self.ackButtons = [QtGui.QWidget(), QtGui.QWidget()]
+                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
                 self.vbox[0].setSpacing(0)
                 self.vbox[1].setSpacing(0)
-                ackButtons.setLayout(self.vbox[0])
+                self.ackButtons[0].setLayout(self.vbox[0])
+                self.ackButtons[1].setLayout(self.vbox[1])
+                self.stackWidget = QtGui.QStackedWidget()
                 
+                
+                self.closingButton = QtGui.QPushButton("Ok")
+                self.closingButton.setStatusTip("Accept Changes")
+                self.closingButton.clicked.connect(self.changeLayout)
+                self.closingButton.resize(self.closingButton.sizeHint())
+                #self.closingButton.hide()
+
+                self.title=QtGui.QLabel(self)
+                self.title.setFixedSize(150,20)
+                #self.title.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
+                self.vbox[1].addWidget(self.title)
 
                 for i in range(len(self.ack)):
                         self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
@@ -139,11 +154,15 @@ class Window(QtGui.QMainWindow):
                         self.btns[i][0].resize(self.btns[i][0].sizeHint())
                         self.vbox[0].addWidget(self.btns[i][0])
                         
+                        self.btns[i][1].stateChanged.connect(self.buttonChecked)
                         self.vbox[1].addWidget(self.btns[i][1])
+                self.spacer = QtGui.QWidget()
+                self.vbox[1].addWidget(self.spacer)
+                self.vbox[1].addWidget(self.closingButton)
+                self.stackWidget.addWidget(self.ackButtons[0])
+                self.stackWidget.addWidget(self.ackButtons[1])
 
-                
-
-                self.setCentralWidget(ackButtons)
+                self.setCentralWidget(self.stackWidget)
                 
                 #Dropped the 'n' because of the addAction method, and because I am lazy                    
                 addActio = QtGui.QAction(QtGui.QIcon("add.png"), '&Add', self)
@@ -155,11 +174,13 @@ class Window(QtGui.QMainWindow):
                 removeActio.setShortcut("Ctrl+R")
                 removeActio.setStatusTip("Remove Acknowledgement")
                 removeActio.triggered.connect(self.removeButton)
+                self.rmButton = False
 
                 editAction = QtGui.QAction(QtGui.QIcon("tooltip.png"), "&Edit", self)
                 editAction.setShortcut("Ctrl+E")
                 editAction.setStatusTip("Set Trigger Tooltip")
                 editAction.triggered.connect(self.addTooltip)
+                self.addHint = False
 
                 topAction = QtGui.QAction(QtGui.QIcon("ontop.png"), "&Top", self)
                 topAction.setShortcut("Ctrl+T")
@@ -182,7 +203,7 @@ class Window(QtGui.QMainWindow):
                 menubar.addAction(exitAction)
                 
                 self.setWindowTitle('Noc Monkey')
-                self.setWindowIcon(QtGui.QIcon('monkey.png'))
+                self.setWindowIcon(QtGui.QIcon('monkey-head.png'))
 
                 #self.acks.clipboard.connect(self.acks.clipboard, QtCore.SIGNAL("dataChanged()"), self.clipStats)
                 self.acks.clipboard.dataChanged.connect(self.clipStatus)
@@ -195,6 +216,8 @@ class Window(QtGui.QMainWindow):
                 self.statusBar().showMessage("'" + sender.text() +"' was copied")
 
         def appendButton(self):
+                if self.stackWidget.currentIndex() != 0:
+                        self.changeLayout()
                 text, ok = QtGui.QInputDialog.getText(self, 'Add Acknowledgement', 'Enter new acknowledgement:')
                 if ok:
                         self.acks.add_to_acks(text)
@@ -202,13 +225,21 @@ class Window(QtGui.QMainWindow):
                         self.btns.append([QtGui.QPushButton(str(text).rstrip('\n')),QtGui.QCheckBox(str(text))])
                         i=len(self.btns)-1
                         self.btns[i][0].clicked.connect(self.buttonClicked)
+                        self.btns[i][1].stateChanged.connect(self.buttonChecked)
                         self.btns[i][0].resize(self.btns[i][0].sizeHint())
+                        self.vbox[1].removeWidget(self.spacer)
+                        self.vbox[1].removeWidget(self.closingButton)
                         self.vbox[0].addWidget(self.btns[i][0])
                         self.vbox[1].addWidget(self.btns[i][1])
+                        self.vbox[1].addWidget(self.spacer)
+                        self.vbox[1].addWidget(self.closingButton)
                 else:
                         pass
         def removeButton(self):
-                text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
+                self.title.setText("Remove Acknowledgement")
+                self.rmButton = True
+                self.stackWidget.setCurrentIndex(1)
+                """text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
                 if ok:
                         foo = False 
                         for i in range(len(self.ack)):
@@ -228,10 +259,13 @@ class Window(QtGui.QMainWindow):
                             self.statusBar().showMessage("Not a valid trigger")
                             self.removeButton()
                 else:
-                        pass
+                        pass"""
         def addTooltip(self):
-                text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'What trigger:')
-                if ok:
+            self.title.setText("Add a Hint to a Trigger")
+            self.addHint = True
+            self.stackWidget.setCurrentIndex(1)
+            """
+
                        foo = False
                        for i in range(len(self.ack)):
                             try:
@@ -252,19 +286,55 @@ class Window(QtGui.QMainWindow):
                            self.statusBar().showMessage("Not a valid trigger")
                            self.addToolTip()
                 else:
-                        pass
+                        pass"""
         def clipStatus(self):
                 if self.acks.clipboard.mimeData().hasText():
                         self.statusBar().showMessage(self.acks.clipboard.text())
                 else:
                         pass
-        def alwaysOnTop(self): #This function doesn't work. Not sure why
+        def alwaysOnTop(self): #This function doesn't work. Causes app to disappear. Not sure why. Sorry :(
             if self.onTop == False:
                 self.setWindowFlags(QtCore.Qt.WindowStaysOnTopHint)
                 self.onTop = True
             else:
                 self.setWindowFlags(self.windowFlags() & ~QtCore.Qt.WindowStaysOnTopHint)
                 self.onTop = False
+        def changeLayout(self):
+            self.rmButton = False
+            self.addHint = False
+            self.title.setText("")
+            self.stackWidget.setCurrentIndex(0)
+        def buttonChecked(self):
+            sender = self.sender()
+            if self.rmButton == True:
+                
+                for i in range(len(self.ack)):
+                    try:
+                        self.ack[i].index(str(sender.text()))
+                        del self.ack[i]
+                        self.vbox[0].removeWidget(self.btns[i][0])
+                        self.vbox[1].removeWidget(self.btns[i][1])
+                        self.btns[i][0].deleteLater()
+                        self.btns[i][1].deleteLater()
+                        del self.btns[i]
+                        self.acks.rewrite_acks(self.ack)
+                    except ValueError:
+                        pass
+            if self.addHint == True:
+                for i in range(len(self.ack)):
+                    try:
+                        self.ack[i].index(str(sender.text()))
+                        text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:')
+                        if ok:
+                            self.ack[i][1] = str(text) + "\n"
+                            self.btns[i][0].setToolTip(str(text))
+                            self.btns[i][0].setStatusTip(str(text))
+                            self.btns[i][1].toggle()
+                            self.acks.rewrite_acks(self.ack)
+                        else:
+                            self.btns[i][1].toggle() 
+                    except ValueError:
+                        pass
 
 def main():
         app = QtGui.QApplication(sys.argv)
