@@ -1,0 +1,1 @@
+If you click from rm to edit it stays stuck in rm mode.
