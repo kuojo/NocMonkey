@@ -127,7 +127,7 @@ class Window(QtGui.QMainWindow):
                 self.ack =  self.acks.write_acks()
                 self.btns = []
                 self.ackButtons = [QtGui.QWidget(), QtGui.QWidget()]
-                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
+                self.vbox = [QtGui.QVBoxLayout(),QtGui.QVBoxLayout()]
                 self.vbox[0].setSpacing(0)
                 self.vbox[1].setSpacing(0)
                 self.ackButtons[0].setLayout(self.vbox[0])
@@ -145,23 +145,30 @@ class Window(QtGui.QMainWindow):
                 #self.title.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
                 self.vbox[1].addWidget(self.title)
 
-                for i in range(len(self.ack)): #This needs to be placed in a try/except IndexError
-                        self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
-                        self.btns[i][0].setToolTip(str(self.ack[i][1]).rstrip('\n'))
-                        self.btns[i][0].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
-                        self.btns[i][0].clicked.connect(self.buttonClicked)
-                        self.btns[i][0].resize(self.btns[i][0].sizeHint())
-                        self.vbox[0].addWidget(self.btns[i][0])
+                try:
+                    for i in range(len(self.ack)): 
+                            self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
+                            self.btns[i][0].setToolTip(str(self.ack[i][1]).rstrip('\n'))
+                            self.btns[i][0].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
+                            self.btns[i][0].clicked.connect(self.buttonClicked)
+                            self.btns[i][0].resize(self.btns[i][0].sizeHint())
+                            self.vbox[0].addWidget(self.btns[i][0])
                         
-                        self.btns[i][1].stateChanged.connect(self.buttonChecked)
-                        self.vbox[1].addWidget(self.btns[i][1])
-                self.spacer = QtGui.QWidget()
-                self.vbox[1].addWidget(self.spacer)
-                self.vbox[1].addWidget(self.closingButton)
-                self.stackWidget.addWidget(self.ackButtons[0])
-                self.stackWidget.addWidget(self.ackButtons[1])
+                            self.btns[i][1].stateChanged.connect(self.buttonChecked)
+                            self.vbox[1].addWidget(self.btns[i][1])
+                    self.spacer = QtGui.QWidget()
+                    self.vbox[1].addWidget(self.spacer)
+                    self.vbox[1].addWidget(self.closingButton)
+                    self.stackWidget.addWidget(self.ackButtons[0])
+                    self.stackWidget.addWidget(self.ackButtons[1])
 
-                self.setCentralWidget(self.stackWidget)
+                    self.setCentralWidget(self.stackWidget)
+                except IndexError:
+                    errMsg = QtGui.QLabel(self)
+                    errMsg.setText("Error:\n\nThis happened because the file 'acks.txt' is formatted incorrectly.\n'acks.txt' should never be directly edited.\nYou should delete the file then reopen NocMonkey")
+                    errMsg.setMargin(10)
+                    errMsg.setFont(QtGui.QFont("Arial", 15, 75, False))
+                    self.setCentralWidget(errMsg)
                 
                 #Dropped the 'n' because of the addAction method, and because I am lazy                    
                 addActio = QtGui.QAction(QtGui.QIcon("add.png"), '&Add a Trigger', self)
