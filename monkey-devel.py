@@ -139,14 +139,13 @@ class Window(QtGui.QMainWindow):
                 self.closingButton.setStatusTip("Accept Changes")
                 self.closingButton.clicked.connect(self.changeLayout)
                 self.closingButton.resize(self.closingButton.sizeHint())
-                #self.closingButton.hide()
 
                 self.title=QtGui.QLabel(self)
                 self.title.setFixedSize(150,20)
                 #self.title.setFrameStyle(QtGui.QFrame.StyledPanel | QtGui.QFrame.Plain)
                 self.vbox[1].addWidget(self.title)
 
-                for i in range(len(self.ack)):
+                for i in range(len(self.ack)): #This needs to be placed in a try/except IndexError
                         self.btns.append([QtGui.QPushButton(str(self.ack[i][0])), QtGui.QCheckBox(str(self.ack[i][0]))])
                         self.btns[i][0].setToolTip(str(self.ack[i][1]).rstrip('\n'))
                         self.btns[i][0].setStatusTip(str(self.ack[i][1]).rstrip('\n'))
@@ -165,42 +164,51 @@ class Window(QtGui.QMainWindow):
                 self.setCentralWidget(self.stackWidget)
                 
                 #Dropped the 'n' because of the addAction method, and because I am lazy                    
-                addActio = QtGui.QAction(QtGui.QIcon("add.png"), '&Add', self)
+                addActio = QtGui.QAction(QtGui.QIcon("add.png"), '&Add a Trigger', self)
                 addActio.setShortcut("Ctrl+A")
                 addActio.setStatusTip("Add Acknowledgement")
                 addActio.triggered.connect(self.appendButton)
 
-                removeActio = QtGui.QAction(QtGui.QIcon("remove.png"), "&Rm", self)
+                removeActio = QtGui.QAction(QtGui.QIcon("remove.png"), "&Remove Button", self)
                 removeActio.setShortcut("Ctrl+R")
                 removeActio.setStatusTip("Remove Acknowledgement")
                 removeActio.triggered.connect(self.removeButton)
                 self.rmButton = False
 
-                editAction = QtGui.QAction(QtGui.QIcon("tooltip.png"), "&Edit", self)
-                editAction.setShortcut("Ctrl+E")
-                editAction.setStatusTip("Set Trigger Tooltip")
-                editAction.triggered.connect(self.addTooltip)
+                hintActio = QtGui.QAction(QtGui.QIcon("tooltip.png"), "&Add Button Hint", self)
+                hintActio.setShortcut("Ctrl+H")
+                hintActio.setStatusTip("Add a hint to the trigger")
+                hintActio.triggered.connect(self.addTooltip)
                 self.addHint = False
 
-                topAction = QtGui.QAction(QtGui.QIcon("ontop.png"), "&Top", self)
-                topAction.setShortcut("Ctrl+T")
-                topAction.setStatusTip("Place application always on top")
-                topAction.triggered.connect(self.alwaysOnTop)
+                editActio = QtGui.QAction("&Edit Buttons", self)
+                editActio.setShortcut("Ctrl+E")
+                editActio.setStatusTip("Change the text on the buttons")
+                editActio.triggered.connect(self.editButton)
+                self.viButton = False
+
+                #This action doesn't work, don't try it
+                topActio = QtGui.QAction(QtGui.QIcon("ontop.png"), "&Top", self)
+                topActio.setShortcut("Ctrl+T")
+                topActio.setStatusTip("Place application always on top")
+                topActio.triggered.connect(self.alwaysOnTop)
                 self.onTop = False
                 
-                exitAction = QtGui.QAction(QtGui.QIcon("need_to_add.png"), '&Exit', self)
-                exitAction.setShortcut("Ctrl+Q")
-                exitAction.setStatusTip("Exit application")
-                exitAction.triggered.connect(self.close)
+                exitActio = QtGui.QAction(QtGui.QIcon("need_to_add.png"), '&Exit', self)
+                exitActio.setShortcut("Ctrl+Q")
+                exitActio.setStatusTip("Exit application")
+                exitActio.triggered.connect(self.close)
 
                 self.statusBar()
 
                 menubar = self.menuBar()
-                menubar.addAction(addActio)
-                menubar.addAction(removeActio)
-                menubar.addAction(editAction)
-                #menubar.addAction(topAction)
-                menubar.addAction(exitAction)
+                filemenu = menubar.addMenu('&File')
+                filemenu.addAction(exitActio)
+                editmenu = menubar.addMenu('&Edit')
+                editmenu.addAction(addActio)
+                editmenu.addAction(editActio)
+                editmenu.addAction(hintActio)
+                editmenu.addAction(removeActio)
                 
                 self.setWindowTitle('Noc Monkey')
                 self.setWindowIcon(QtGui.QIcon('monkey-head.png'))
@@ -238,55 +246,22 @@ class Window(QtGui.QMainWindow):
         def removeButton(self):
                 self.title.setText("Remove Acknowledgement")
                 self.rmButton = True
+                self.addHint = False
+                self.viButton = False
                 self.stackWidget.setCurrentIndex(1)
-                """text, ok = QtGui.QInputDialog.getText(self, 'Remove Acknowledgement', 'What trigger:')
-                if ok:
-                        foo = False 
-                        for i in range(len(self.ack)):
-                            try:
-                                    self.ack[i].index(text)
-                                    foo = True
-                                    del self.ack[i]
-                                    self.vbox[0].removeWidget(self.btns[i][0])
-                                    self.vbox[1].removeWidget(self.btns[i][1])
-                                    self.btns[i][0].deleteLater()
-                                    self.btns[i][1].deleteLater()
-                                    del self.btns[i]
-                                    self.acks.rewrite_acks(self.ack)
-                            except ValueError:
-                                    pass
-                        if foo == False:
-                            self.statusBar().showMessage("Not a valid trigger")
-                            self.removeButton()
-                else:
-                        pass"""
         def addTooltip(self):
             self.title.setText("Add a Hint to a Trigger")
+            self.rmButton = False
             self.addHint = True
+            self.viButton = False
             self.stackWidget.setCurrentIndex(1)
-            """
+        def editButton(self):
+            self.title.setText("Change Button text")
+            self.rmButton = False
+            self.addHint = False
+            self.viButton = True
+            self.stackWidget.setCurrentIndex(1)
 
-                       foo = False
-                       for i in range(len(self.ack)):
-                            try:
-                                    num = self.ack[i].index(text)
-                                    foo = True
-                                    text,ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:')
-                                        
-                                    if ok:
-                                            self.ack[i][1] = str(text) + "\n"
-                                            self.btns[i][0].setToolTip(str(text))
-                                            self.btns[i][0].setStatusTip(str(text))
-                                            self.acks.rewrite_acks(self.ack)
-                                    else:
-                                            pass
-                            except ValueError:
-                                pass
-                       if foo == False:
-                           self.statusBar().showMessage("Not a valid trigger")
-                           self.addToolTip()
-                else:
-                        pass"""
         def clipStatus(self):
                 if self.acks.clipboard.mimeData().hasText():
                         self.statusBar().showMessage(self.acks.clipboard.text())
@@ -302,6 +277,7 @@ class Window(QtGui.QMainWindow):
         def changeLayout(self):
             self.rmButton = False
             self.addHint = False
+            self.viButton = False
             self.title.setText("")
             self.stackWidget.setCurrentIndex(0)
         def buttonChecked(self):
@@ -325,7 +301,6 @@ class Window(QtGui.QMainWindow):
                 for i in range(len(self.ack)):
                     try:
                         self.ack[i].index(str(sender.text()))
-                        line = QtGui.QLineEdit
                         text, ok = QtGui.QInputDialog.getText(self, 'Add ToolTip', 'Whats the tooltip:', QtGui.QLineEdit.Normal, str(self.btns[i][0].statusTip()))
                         if ok:
                             self.ack[i][1] = str(text) + "\n"
@@ -338,6 +313,21 @@ class Window(QtGui.QMainWindow):
                             
                         else:
                             self.btns[i][1].toggle() 
+                    except ValueError:
+                        pass
+            if self.viButton == True:
+                for i in range(len(self.ack)):
+                    try:
+                        self.ack[i].index(str(sender.text()))
+                        text, ok = QtGui.QInputDialog.getText(self, 'Change Button text', 'Edit Button Text:', QtGui.QLineEdit.Normal, str(self.btns[i][0].text()))
+                        if ok:
+                            self.ack[i][0] = str(text)
+                            self.btns[i][0].setText(str(text))
+                            self.btns[i][1].setText(str(text))
+                            self.btns[i][1].toggle()
+                            self.acks.rewrite_acks(self.ack)
+                        else:
+                            self.btns[i][1].toggle()
                     except ValueError:
                         pass
 
